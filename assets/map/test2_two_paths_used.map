@@ -1,0 +1,42 @@
+6
+
+#			  start
+#			 /  |
+#	b2	- b1	a1	-	a2
+#	|			|		|
+#	b3			X24		a3
+#	|			|		|
+#	b4	-b5	-	b6		a4
+#				|	  /
+#				  end
+
+##start
+start 2 0
+b1 1 2
+b2 0 2
+a1 2 2
+b3 0 4
+X24 2 4
+a2 4 3
+b4 0 6
+a3 4 5
+b5 1 6
+b6 2 6
+a4 4 7
+##end
+end 2 8
+
+start-a1
+a1-X24
+X24-b6
+b6-end
+start-b1
+b1-b2
+b2-b3
+b3-b4
+b4-b5
+b5-b6
+a1-a2
+a2-a3
+a3-a4
+a4-end

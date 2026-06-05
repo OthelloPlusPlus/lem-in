@@ -1,0 +1,119 @@
+999
+
+#										lorem
+#						ipsum			dolor		sit
+#			amet		consectetur		adipiscing	elit		Nunc
+#	sodales	ullamcorper	rhoncus			Curabitur	sed			enim	sapien
+#			Vestibulum	sollicitudin	lorem2		lectus		sed2
+#						consequat		erat		pharetra
+#										sed3
+
+#	adipiscing > Curabitur > lorem2
+#	adipiscing > sed > lorem2
+#	adipiscing > consectetur > ullamcorper > sollicitudin > lorem2
+#	adipiscing > sit > Nunc > enim > sed2 > pharetra > lorem2
+
+lorem 6 0
+ipsum 4 2
+dolor 6 2
+sit 8 2
+amet 2 4
+consectetur 4 4
+
+##start
+adipiscing 6 4
+
+elit 8 4
+Nunc 10 4
+sodales 0 6
+ullamcorper 2 6
+rhoncus 4 6
+Curabitur 6 6
+sed 8 6
+enim 10 6
+sapien 12 6
+Vestibulum 2 8
+sollicitudin 4 8
+
+##end
+lorem2 6 8
+
+lectus 8 8
+sed2 10 8
+consequat 4 10
+erat 6 10
+pharetra 8 10
+sed3 6 12
+
+lorem-ipsum
+lorem-dolor
+lorem-sit
+ipsum-dolor
+ipsum-amet
+ipsum-consectetur
+ipsum-adipiscing
+dolor-sit
+dolor-consectetur
+dolor-adipiscing
+dolor-elit
+sit-adipiscing
+sit-elit
+sit-Nunc
+amet-consectetur
+amet-sodales
+amet-ullamcorper
+amet-rhoncus
+consectetur-adipiscing
+consectetur-ullamcorper
+consectetur-rhoncus
+consectetur-Curabitur
+adipiscing-elit
+adipiscing-rhoncus
+adipiscing-Curabitur
+adipiscing-sed
+elit-Nunc
+elit-Curabitur
+elit-sed
+elit-enim
+Nunc-sed
+Nunc-enim
+Nunc-sapien
+sodales-ullamcorper
+sodales-Vestibulum
+ullamcorper-rhoncus
+ullamcorper-Vestibulum
+ullamcorper-sollicitudin
+rhoncus-Curabitur
+rhoncus-Vestibulum
+rhoncus-sollicitudin
+rhoncus-lorem2
+Curabitur-sed
+Curabitur-sollicitudin
+Curabitur-lorem2
+Curabitur-lectus
+sed-enim
+sed-lorem2
+sed-lectus
+sed-sed2
+enim-sapien
+enim-lectus
+enim-sed2
+sapien-sed2
+Vestibulum-sollicitudin
+Vestibulum-consequat
+sollicitudin-lorem2
+sollicitudin-consequat
+sollicitudin-erat
+lorem2-lectus
+lorem2-consequat
+lorem2-erat
+lorem2-pharetra
+lectus-sed2
+lectus-erat
+lectus-pharetra
+sed2-pharetra
+consequat-erat
+consequat-sed3
+erat-pharetra
+erat-sed3
+pharetra-sed3

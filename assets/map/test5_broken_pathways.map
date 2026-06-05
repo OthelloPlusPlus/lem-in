@@ -1,0 +1,84 @@
+99
+
+#				X60
+#			X42	X62	d1
+#		Z24	c1	s	Z84	d2
+#	X06	c2	Z46	a1	b1	d3	Zc6
+#		X28	c3	e	Z88	d4
+#			X4a	X6a	d5
+#				Z6c
+
+#	s > a1 > e
+#	s > b1 > e
+#	s > c1 > c2 > c3 > e
+#	s > d1 > d2 > d3 > d4 > d5 > e
+
+X60 6 0
+X42 4 2
+X62 6 2
+d1 8 2
+Z24 2 4
+c1 4 4
+##start
+s 6 4
+Z84 8 4
+d2 10 4
+X06 0 6
+c2 2 6
+Z46 4 6
+a1 6 6
+b1 8 6
+d3 10 6
+Zc6 12 6
+X28 2 8
+c3 4 8
+##end
+e 6 8
+Z88 8 8
+d4 10 8
+X4a 4 10
+X6a 6 10
+d5 8 10
+Z6c 6 12
+
+X60-X42
+X60-X62
+X60-d1
+X42-X62
+X42-c1
+X42-s
+X62-d1
+X62-c1
+X62-s
+d1-s
+d1-d2
+c1-s
+c1-c2
+c1-a1
+s-a1
+s-b1
+d2-b1
+d2-d3
+X06-c2
+X06-X28
+c2-X28
+c2-c3
+a1-b1
+a1-c3
+a1-e
+b1-d3
+b1-e
+b1-d4
+d3-d4
+X28-c3
+X28-X4a
+c3-e
+c3-X4a
+c3-X6a
+e-X4a
+e-X6a
+e-d5
+d4-d5
+X4a-X6a
+X6a-d5
+
