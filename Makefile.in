@@ -1,0 +1,224 @@
+-include colors.mk
+
+# =========================
+# Project Configuration
+# =========================
+
+NAME :=		lem-in
+VISUAL :=	visu-hex
+
+# Compiler
+CC ?=			@CC@
+# Compile flags (compile + link)
+CFLAGS ?=		@CFLAGS@
+CPPFLAGS ?=		@CPPFLAGS@
+DFLAGS =		-MMD -MP -MF $(DEP_DIR)$*.d
+# Link flags
+LDFLAGS ?=		@LDFLAGS@
+LDLIBS :=		@LDLIBS@
+MLX_LDLIBS :=	-lmlx42 -ldl -lglfw -pthread -lm
+
+# =========================
+# Build types
+# =========================
+
+BUILD ?=	release
+# Release
+ifeq ($(BUILD),release)
+	CFLAGS +=	-O3
+endif
+# Debug
+ifeq ($(BUILD),debug)
+	CFLAGS +=	-O0 -g3
+endif
+# Sanitizer (ASan / UBSan)
+#
+# Debug helpers (ASan symbols)
+# addr2line -f -C -e visu-hex <addresses>
+#
+# Example:
+# Direct leak of 24 byte(s) in 1 object(s) allocated from:
+#     #0 0x49a3dd  (/sgoinfre/ohengelm/CodamAdvancedProjects/lem_in/visu-hex+0x49a3dd)
+#     #1 0x4f3c20  (/sgoinfre/ohengelm/CodamAdvancedProjects/lem_in/visu-hex+0x4f3c20)
+# Results in:
+# addr2line -f -C -e visu-hex 0x49a3dd 0x4f3c20
+ifeq ($(BUILD),sanitize)
+	CFLAGS +=	-g3 -O0 \
+				-fsanitize=address,undefined \
+				-fsanitize-address-use-after-scope \
+				-fno-omit-frame-pointer \
+				-fno-sanitize-recover=all
+	LDFLAGS +=	-fsanitize=address,undefined \
+				-fsanitize-address-use-after-scope
+endif
+
+# =========================
+# Source Definition
+# =========================
+
+SRC_DIR :=	src/
+OBJ_DIR :=	obj/
+DEP_DIR :=	dep/
+
+SRC_MAIN :=	common_functions.c	error_exit.c
+SRC_MAIN_$(NAME) :=		main.c
+SRC_MAIN_$(VISUAL) :=	visualizer.c
+
+# PARSE
+DIR_PARSE :=	$(SRC_DIR)parse/
+SRC_PARSE :=	parse_from_fd.c\
+				store_for_later.c	remove_from_storage.c
+SRC_PARSE_$(VISUAL):=	parse_remnant_visual.c
+
+# FARM
+DIR_FARM :=	$(SRC_DIR)farm/
+SRC_FARM :=	prepare_farm.c	valid_farm.c	print_farm.c	destroy_farm.c
+
+# ANT
+DIR_ANT :=	$(SRC_DIR)ant/
+SRC_ANT :=	parse_ant.c			create_ant.c	delete_ant.c\
+			add_ants_to_farm.c
+SRC_ANT_$(NAME) :=		move_ants_through_farm.c	queue.c
+SRC_ANT_$(VISUAL) :=	add_ants_to_visual.c
+
+# ROOM
+DIR_ROOM :=	$(SRC_DIR)room/
+SRC_ROOM :=	parse_room.c		valid_room_name.c	create_room.c\
+			print_rooms.c		delete_rooms.c\
+			add_room_to_farm.c	find_room_by_name.c
+SRC_ROOM_$(NAME) :=		bfs_room_depths.c
+SRC_ROOM_$(VISUAL) :=	add_rooms_to_visual.c
+
+# LINK
+DIR_LINK :=	$(SRC_DIR)link/
+SRC_LINK :=	parse_link.c		create_link.c	print_links.c	delete_links.c\
+			add_link_to_farm.c	connect_links.c
+SRC_LINK_$(NAME) :=	
+SRC_LINK_$(VISUAL) :=	draw_links.c
+
+# PATH
+DIR_PATH :=	$(SRC_DIR)path/
+SRC_PATH_$(NAME):=	paths.c			create_paths.c	print_paths.c\
+					find_paths.c	bfs_queue.c
+					
+# MOVES
+DIR_MVS :=	$(SRC_DIR)moves/
+SRC_MVS_$(VISUAL) :=	parse_moves.c		create_move.c	delete_moves.c\
+						add_ants_to_moves.c
+
+# VISUAL
+DIR_VIS :=	$(SRC_DIR)visual/
+SRC_VIS_$(VISUAL) :=	prepare_visual.c	delete_visuals.c\
+						start_mlx.c			rgba.c\
+						center_image.c		scale_image_to.c\
+						set_mode.c			put_info_strings.c\
+						key_hook.c			loop_hook.c
+
+SRC =	$(SRC_MAIN:%.c=$(SRC_DIR)%.c)\
+		$(SRC_PARSE:%.c=$(DIR_PARSE)%.c)\
+		$(SRC_FARM:%.c=$(DIR_FARM)%.c)\
+		$(SRC_ANT:%.c=$(DIR_ANT)%.c)\
+		$(SRC_ROOM:%.c=$(DIR_ROOM)%.c)\
+		$(SRC_LINK:%.c=$(DIR_LINK)%.c)
+
+SRC_$(NAME) =	$(SRC_MAIN_$(NAME):%.c=$(SRC_DIR)%.c)\
+				$(SRC)\
+				$(SRC_PARSE_$(NAME):%.c=$(DIR_PARSE)%.c)\
+				$(SRC_FARM_$(NAME):%.c=$(DIR_FARM)%.c)\
+				$(SRC_ANT_$(NAME):%.c=$(DIR_ANT)%.c)\
+				$(SRC_ROOM_$(NAME):%.c=$(DIR_ROOM)%.c)\
+				$(SRC_LINK_$(NAME):%.c=$(DIR_LINK)%.c)\
+				$(SRC_PATH_$(NAME):%.c=$(DIR_PATH)%.c)
+OBJ_$(NAME) :=	$(SRC_$(NAME):$(SRC_DIR)%.c=$(OBJ_DIR)%.o)
+DEP_$(NAME) :=	$(OBJ_$(NAME):$(OBJ_DIR)%.o=$(DEP_DIR)%.d)
+
+SRC_$(VISUAL) =	$(SRC_MAIN_$(VISUAL):%.c=$(SRC_DIR)%.c)\
+				$(SRC)\
+				$(SRC_PARSE_$(VISUAL):%.c=$(DIR_PARSE)%.c)\
+				$(SRC_FARM_$(VISUAL):%.c=$(DIR_FARM)%.c)\
+				$(SRC_ANT_$(VISUAL):%.c=$(DIR_ANT)%.c)\
+				$(SRC_ROOM_$(VISUAL):%.c=$(DIR_ROOM)%.c)\
+				$(SRC_LINK_$(VISUAL):%.c=$(DIR_LINK)%.c)\
+				$(SRC_MVS_$(VISUAL):%.c=$(DIR_MVS)%.c)\
+				$(SRC_VIS_$(VISUAL):%.c=$(DIR_VIS)%.c)
+OBJ_$(VISUAL) :=	$(SRC_$(VISUAL):$(SRC_DIR)%.c=$(OBJ_DIR)%.o)
+DEP_$(VISUAL) :=	$(OBJ_$(VISUAL):$(OBJ_DIR)%.o=$(DEP_DIR)%.d)
+
+# =========================
+# OUTPUT_TYPEs
+# =========================
+
+all: $(NAME) $(VISUAL)
+
+$(NAME): $(OBJ_$(NAME))
+	@printf	"$(CC_LINE)$(C_DORANGE)Linking $(C_ORANGE)C$(C_DORANGE) object files into $(C_ORANGE)%s$(C_DORANGE)...$(C_RESET)\n"\
+		"$@"
+	@$(CC) $^ $(LDLIBS) -o $@
+
+$(VISUAL): $(OBJ_$(VISUAL))
+	@printf	"$(CC_LINE)$(C_DORANGE)Linking $(C_ORANGE)C$(C_DORANGE) object files into $(C_ORANGE)%s$(C_DORANGE)...$(C_RESET)\n"\
+		"$@"
+	@$(CC) $^ $(LDLIBS) $(MLX_LDLIBS) -o $@
+
+# =========================
+# Build Rules
+# =========================
+
+# Ensure directories exist
+$(OBJ_DIR) $(DEP_DIR):
+	@printf	"$(CC_LINE)$(C_DCYBL)Creating directory $(C_CYBL)%s$(C_DCYBL)...$(C_RESET)"\
+		"$@"
+	@mkdir -p $@
+
+# Compile C
+$(OBJ_DIR)%.o: $(SRC_DIR)%.c | $(OBJ_DIR) $(DEP_DIR)
+	@mkdir -p $(@D) $(DEP_DIR)/$(*D)
+	@printf	"$(CC_LINE)$(C_DCYAN)Compiling $(C_CYAN)%s$(C_DCYAN) to $(C_CYAN)%s$(C_DCYAN)...$(C_RESET)\n"\
+		"$<" "$@"
+	@$(CC) $(CFLAGS) $(CPPFLAGS) $(DFLAGS) -c $< -o $@ && printf	"\033[A"
+
+# =========================
+# Test Suite
+# =========================
+
+test: 
+	@./demo.sh
+
+demo: test
+run: test
+
+# =========================
+# Cleaning
+# =========================
+
+clean:
+	@printf	"$(CC_LINE)$(C_DRED)Removing object files...$(C_RESET)\n"
+	@rm -f $(OBJ_$(NAME))
+	@printf	"$(CC_LINE)$(C_DRED)Removing dependency files...$(C_RESET)\n"
+	@rm -f $(DEP_$(NAME))
+	@printf	"$(CC_LINE)$(C_DRED)Removing visual object files...$(C_RESET)\n"
+	@rm -f $(OBJ_$(VISUAL))
+	@printf	"$(CC_LINE)$(C_DRED)Removing visual dependency files...$(C_RESET)\n"
+	@rm -f $(DEP_$(VISUAL))
+	@printf	"$(CC_LINE)$(C_DRED)Removing object and dependency directories...$(C_RESET)\n"
+	@rm -r $(OBJ_DIR) $(DEP_DIR) | true
+
+fclean: clean
+	@printf	"$(CC_LINE)$(C_DRED)Removing $(C_RED)%s$(C_DRED)...$(C_RESET)\n"\
+		"$(NAME)"
+	@rm -f $(NAME) $(VISUAL)
+
+re: fclean all
+
+# =========================
+# Dependencies
+# =========================
+
+-include $(DEP_$(NAME))
+-include $(DEP_$(VISUAL))
+
+# =========================
+# Phony
+# =========================
+
+.PHONY: all test test demo run clean fclean re

@@ -1,0 +1,306 @@
+#!/bin/sh
+
+# ==============================================================================
+#                                   FUNCTIONS
+# ==============================================================================
+
+# ----------------------------
+# Library / dependency tests
+# ----------------------------
+
+test_libraries()
+{
+	# libft
+	LIBFT_NAME="libft"
+	LIBFT_FLAGS="-lft"
+	LIBFT_HEADER="libft.h"
+	LIBFT_URL="https://github.com/OthelloPlusPlus/Libft.git"
+	LIBFT_FUNCS=$(find . -type f -name "*.c" -exec grep -hoE '\bft_[a-zA-Z0-9_]*\(' {} + \
+	| sed 's/(//' \
+	| sort -u)
+	if [ -n "$LIBFT_FUNCS" ]; then
+		test_library	"${LIBFT_NAME}"	"${LIBFT_FLAGS}"	"${LIBFT_HEADER}"	"${LIBFT_URL}"	${LIBFT_FUNCS}
+	fi
+
+	# MLX42 2.4.2
+	MLX_NAME="libmlx42"
+	MLX_FLAGS="-lmlx42 -ldl -lglfw -pthread -lm"
+	MLX_HEADER="MLX42/MLX42.h"
+	MLX_URL="https://github.com/codam-coding-college/MLX42.git (git checkout v2.4.2)"
+	MLX_FUNCS="mlx_init mlx_loop"
+	test_library	"${MLX_NAME}"	"${MLX_FLAGS}"	"${MLX_HEADER}"	"${MLX_URL}"	${MLX_FUNCS}
+}
+
+test_library()
+{
+	lib="$1"
+	flags="$2"
+	header="$3"
+	link="$4"
+	shift 4
+
+	if verify_library	&&
+		verify_header	&&
+		verify_function_links	"$@"
+	then
+		echo "OK: $lib"
+		return 0
+	fi
+	printf	"Error:\tlib%s.a not found or usable.\n" "$lib" >&2
+	if [ -n "${link}" ]; then
+		printf "Source:\t%s\n" "$link" >&2
+	fi
+	exit 1
+}
+
+verify_library()
+{
+	${CC} -x c - -o /dev/null ${LIB_DIRS} $flags <<EOF || {
+int main(void) { return 0; }
+EOF
+		printf	"Error:\tLibrary lib$lib.a not found or not linkable.\n" >&2
+		return 1
+	}
+}
+
+verify_header()
+{
+	${CC} -x c - -o /dev/null ${INCL_DIRS} <<EOF || {
+#include "$header"
+
+int main(void) { return 0; }
+EOF
+		printf	"Error:\tHeader $header not found or not compilable.\n" >&2
+		return 1
+	}
+}
+
+verify_function_links()
+{
+	ret=0
+
+	for fn in "$@"; do
+		if	test_as_function ||
+			test_as_macro
+		then
+			continue ;
+		else
+			printf	"Error:\tSymbol '$fn' not found in ${flags}.\n" >&2
+			ret=1;
+		fi
+	done
+	return ${ret};
+}
+
+test_as_function()
+{
+	${CC} -x c - -o /dev/null ${INCL_DIRS} ${LIB_DIRS} $flags <<EOF 2>/dev/null
+#include "$header"
+
+void (*_check)(void) = (void (*)(void))$fn;
+
+int main(void)
+{
+	(void)_check;
+	return 0;
+}
+EOF
+}
+
+test_as_macro()
+{
+	${CC} -E -dM -include "$header" - ${INCL_DIRS} </dev/null 2>/dev/null \
+		| grep -q "^#define[[:space:]]\+$fn"
+}
+
+# ----------------------------
+# Directories
+# ----------------------------
+
+valid_target_dir()
+{
+	path="$1"
+
+	[ -d "$path" ] || return 1;
+	for sub in bin lib; do
+		if [ -d "$path/$sub" ]; then
+			[ -w "$path/$sub" ] || return 1;
+		else
+			[ -w "$path" ] || return 1;
+		fi
+	done
+	return 0
+}
+
+set_dir_var()
+{
+	var_name="$1"
+	value="$2"
+
+	if valid_target_dir "$value"; then
+		eval "$var_name=\$value"
+	else
+		printf "Error: Invalid %s %s\n" "$var_name" "$value" >&2
+		exit 1
+	fi
+}
+
+append_flag_as()
+{
+	var_name="$1"
+	flag="$2"
+	dir="$3"
+
+	# Confirm directories existance -d and user accesability -x
+	if [ -d "$dir" ] && [ -x "$dir" ]; then
+		eval "$var_name=\"\${$var_name} $flag$dir\""
+	else
+		echo "Error: Invalid $var_name path: $dir" >&2
+		exit 1
+	fi
+}
+
+# ----------------------------
+# Help / usage printing
+# ----------------------------
+
+print_help()
+{
+	cat	<<EOF | fold -s -w80
+\`configure' configures this package to adapt to many kinds of systems.
+
+Usage: $0 [OPTION]... [VAR=VALUE]...
+
+To assign environment variables (e.g., CC, CFLAGS...), specify them as
+VAR=VALUE.  See below for descriptions of some of the useful variables.
+
+Defaults for the options are specified in brackets.
+
+Configuration:
+  -h, --help              display this help and exit
+      --check-deps        check required libraries and exit
+  -n, --no-create         do not create output files
+      --with-include=DIR  add additional header search path (-I DIR)
+      --with-lib=DIR      add additional library search path (-L DIR)
+
+Installation directories:
+  --prefix=PREFIX         install architecture-independent files in PREFIX
+                          [$PREFIX_default]
+
+By default, \`make install' will install all the files in \`$PREFIX_default/bin', \`$PREFIX_default/lib' etc.  You can specify an installation prefix other than \`$PREFIX_default' using \`--prefix', for instance \`--prefix=\$HOME'.
+
+For better control, use the options below.
+
+Fine tuning of the installation directories:
+  --bindir=DIR            user executables
+                          [$PREFIX_default/bin]
+  --libdir=DIR            object code libraries
+                          [$PREFIX_default/lib]
+  --includedir=DIR        C header files
+                          [$PREFIX_default/include]
+Defaults for the options are specified in brackets.
+
+Report bugs to the program provider.
+EOF
+}
+
+# ==============================================================================
+#                               SCRIPT EXECUTION
+# ==============================================================================
+
+# Validate there even in an Makefile.in
+if ! [ -r "./Makefile.in" ]; then
+	printf	"Error: Missing ./Makefile.in.\n"	>&2
+	exit 1
+fi
+
+# Configure default settings, options and flags
+for dir in \
+	"$HOME/.local" \
+	"$HOME/local" \
+	"/usr/local"
+do
+	if valid_target_dir "$dir"; then
+		PREFIX_default="$dir"
+		break
+	fi
+done
+PREFIX="$PREFIX_default"
+CC_default="cc"
+CFLAGS_default='\
+CFLAGS +=		-Wall -Wextra -Werror\
+CFLAGS +=		-Wno-unused-result'
+CPPFLAGS="-Ihdr"
+LDFLAGS=""
+LDLIBS_default="-lft"
+
+# Configure user input
+for arg in "$@"; do
+	case "$arg" in
+		--prefix=*)
+			set_dir_var	PREFIX "${arg#*=}"
+			;;
+		--bindir=*)
+			set_dir_var	BINDIR "${arg#*=}"
+			;;
+		--libdir=*)
+			set_dir_var	LIBDIR "${arg#*=}"
+			;;
+		--includedir=*)
+			set_dir_var	INCLUDEDIR "${arg#*=}"
+			;;
+		--with-lib=*)
+			append_flag_as "LDFLAGS"	"-L"	"${arg#*=}"
+			;;
+		--with-include=*)
+			append_flag_as "CPPFLAGS"	"-I"	"${arg#*=}"
+			;;
+		--check-deps)
+			test_libraries;
+			exit 0;
+			;;
+		-n|--no-create)
+			NOCREATE=1;
+			;;
+		-h|--help)
+			print_help;
+			exit 0;
+			;;
+		*)
+			printf "Unknown option: %s\n"	"$arg" >&2
+			exit 1
+			;;
+	esac
+done
+
+# Configure settings, options, and flags to final setting
+if [ -n "$PREFIX" ]; then
+	BINDIR="${BINDIR:-${PREFIX}/bin}"
+	LIBDIR="${LIBDIR:-${PREFIX}/lib}"
+	INCLUDEDIR="${INCLUDEDIR:-${PREFIX}/include}"
+else
+	echo "Warning: no valid --prefix found. Install paths will not be derived automatically." >&2
+fi
+CC=${CC:-cc}
+CFLAGS="${CFLAGS:-$CFLAGS_default}"
+LDFLAGS="${LDFLAGS:-$LDFLAGS_default}"
+LDLIBS="${LDLIBS:-$LDLIBS_default}"
+
+# Validate required libraries are present and usable.
+# Function can be adjusted to specific use cases.
+test_libraries;
+
+# Create Makefile from Makefile.in
+if [ "${NOCREATE:-0}" -eq 0 ]; then
+	sed	-e "s|@prefix@|$PREFIX|g" \
+		-e "s|@bindir@|$BINDIR|g" \
+		-e "s|@libdir@|$LIBDIR|g" \
+		-e "s|@includedir@|$INCLUDEDIR|g" \
+		-e "s|@CC@|$CC|g" \
+		-e "s|@CFLAGS@|$CFLAGS|g" \
+		-e "s|@CPPFLAGS@|$CPPFLAGS|g" \
+		-e "s|@LDFLAGS@|$LDFLAGS|g" \
+		-e "s|@LDLIBS@|$LDLIBS|g" \
+		-e "s|@INSTALL@|install|g" \
+		Makefile.in > Makefile
+fi
