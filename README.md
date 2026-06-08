@@ -192,7 +192,9 @@ make demo
 # References
 
 [Flow network](https://en.wikipedia.org/wiki/Flow_network)
+
 [Edmonds–Karp algorithm](https://en.wikipedia.org/wiki/Edmonds%E2%80%93Karp_algorithm)
+
 [BFS - Breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search)
 
 ---
