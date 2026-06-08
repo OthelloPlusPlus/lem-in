@@ -47,6 +47,9 @@ The second stage follows the augmenting path and updates the current flow state 
 In the third stage, the [set of available paths](src/path/find_paths.c#L105) in the current flow state is generated. This flow state is then [evaluated](src/path/find_paths.c#L106) by computing the projected number of turns required for all units to traverse the network under that configuration. The resulting cost is [compared](src/path/find_paths.c#L109) against the previously best known flow state, and the best-performing path set is stored.
 
 When no further augmenting paths can be found, the flow state with the lowest evaluated cost remains as the optimal solution.
+<div style="background:white; display:inline-block; padding:10px; border-radius:6px;">
+  <img src="https://github.com/OthelloPlusPlus/lem-in/blob/img/EdmondsKarp.gif" alt="EdmondsKarp" width="69%"/>
+</div>
 
 ---
 
